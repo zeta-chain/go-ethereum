@@ -84,7 +84,7 @@ func (t *fourByteTracer) CaptureStart(env *vm.EVM, from common.Address, to commo
 
 	// Update list of precompiles based on current block
 	rules := env.ChainConfig().Rules(env.Context.BlockNumber, env.Context.Random != nil)
-	t.activePrecompiles = vm.ActivePrecompiles(rules)
+	t.activePrecompiles = env.ActivePrecompiles(rules)
 
 	// Save the outer calldata also
 	if len(input) >= 4 {
