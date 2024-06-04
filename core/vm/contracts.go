@@ -112,51 +112,32 @@ var PrecompiledContractsBLS = map[common.Address]PrecompiledContract{
 var (
 	// PrecompiledAddressesBerlin defines the default set of pre-compiled
 	// Ethereum contract addresses used in the Berlin release.
-	PrecompiledAddressesBerlin = []common.Address{
-		ecrecover{}.Address(),
-		sha256hash{}.Address(),
-		ripemd160hash{}.Address(),
-		dataCopy{}.Address(),
-		bigModExp{}.Address(),
-		bn256AddIstanbul{}.Address(),
-		bn256ScalarMulIstanbul{}.Address(),
-		bn256PairingIstanbul{}.Address(),
-		blake2F{}.Address(),
-	}
+	PrecompiledAddressesBerlin = []common.Address{}
 	// PrecompiledAddressesIstanbul defines the default set of pre-compiled
 	// Ethereum contract addresses used in the Istanbul release.
-	PrecompiledAddressesIstanbul = []common.Address{
-		ecrecover{}.Address(),
-		sha256hash{}.Address(),
-		ripemd160hash{}.Address(),
-		dataCopy{}.Address(),
-		bigModExp{}.Address(),
-		bn256AddIstanbul{}.Address(),
-		bn256ScalarMulIstanbul{}.Address(),
-		bn256PairingIstanbul{}.Address(),
-		blake2F{}.Address(),
-	}
+	PrecompiledAddressesIstanbul = []common.Address{}
 	// PrecompiledAddressesByzantium defines the default set of pre-compiled
 	// Ethereum contract addresses used in the Byzantium release.
-	PrecompiledAddressesByzantium = []common.Address{
-		ecrecover{}.Address(),
-		sha256hash{}.Address(),
-		ripemd160hash{}.Address(),
-		dataCopy{}.Address(),
-		bigModExp{}.Address(),
-		bn256AddByzantium{}.Address(),
-		bn256ScalarMulByzantium{}.Address(),
-		bn256PairingByzantium{}.Address(),
-	}
+	PrecompiledAddressesByzantium = []common.Address{}
 	// PrecompiledAddressesHomestead defines the default set of pre-compiled
 	// Ethereum contract addresses used in the Homestead release.
-	PrecompiledAddressesHomestead = []common.Address{
-		ecrecover{}.Address(),
-		sha256hash{}.Address(),
-		ripemd160hash{}.Address(),
-		dataCopy{}.Address(),
-	}
+	PrecompiledAddressesHomestead = []common.Address{}
 )
+
+func init() {
+	for k := range PrecompiledContractsBerlin {
+		PrecompiledAddressesBerlin = append(PrecompiledAddressesBerlin, k)
+	}
+	for k := range PrecompiledContractsIstanbul {
+		PrecompiledAddressesIstanbul = append(PrecompiledAddressesIstanbul, k)
+	}
+	for k := range PrecompiledContractsByzantium {
+		PrecompiledAddressesByzantium = append(PrecompiledAddressesByzantium, k)
+	}
+	for k := range PrecompiledContractsHomestead {
+		PrecompiledAddressesHomestead = append(PrecompiledAddressesHomestead, k)
+	}
+}
 
 // DefaultActivePrecompiles returns the set of precompiles enabled with the default configuration.
 func DefaultActivePrecompiles(rules params.Rules) []common.Address {
@@ -410,8 +391,8 @@ type bigModExp struct {
 }
 
 var (
-	big0      = big.NewInt(0)
-	big1      = big.NewInt(1)
+	big0 = big.NewInt(0)
+	big1 = big.NewInt(1)
 	//big2      = big.NewInt(2)
 	big3      = big.NewInt(3)
 	big4      = big.NewInt(4)
@@ -431,9 +412,10 @@ var (
 // modexpMultComplexity implements bigModexp multComplexity formula, as defined in EIP-198
 //
 // def mult_complexity(x):
-//    if x <= 64: return x ** 2
-//    elif x <= 1024: return x ** 2 // 4 + 96 * x - 3072
-//    else: return x ** 2 // 16 + 480 * x - 199680
+//
+//	if x <= 64: return x ** 2
+//	elif x <= 1024: return x ** 2 // 4 + 96 * x - 3072
+//	else: return x ** 2 // 16 + 480 * x - 199680
 //
 // where is x is max(length_of_MODULUS, length_of_BASE)
 func modexpMultComplexity(x *big.Int) *big.Int {
