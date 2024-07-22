@@ -52,6 +52,8 @@ type keccakState interface {
 	Read([]byte) (int, error)
 }
 
+var _ Interpreter = &EVMInterpreter{}
+
 // EVMInterpreter represents an EVM interpreter
 type EVMInterpreter struct {
 	evm *EVM
