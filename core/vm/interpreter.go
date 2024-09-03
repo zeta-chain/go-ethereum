@@ -188,9 +188,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		// Get the operation from the jump table and validate the stack to ensure there are
 		// enough stack items available to perform the operation.
 		op = contract.GetOp(pc)
-		fmt.Println("OP CODE ", op.String())
 		operation := in.cfg.JumpTable[op]
-		fmt.Println("OPERATION", operation)
 		cost = operation.constantGas // For tracing
 		// Validate stack
 		if sLen := stack.len(); sLen < operation.minStack {
@@ -199,7 +197,6 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 			return nil, &ErrStackOverflow{stackLen: sLen, limit: operation.maxStack}
 		}
 		if !contract.UseGas(cost) {
-			fmt.Println("ERROUTOFGAS")
 			return nil, ErrOutOfGas
 		}
 		if operation.dynamicGas != nil {
@@ -244,7 +241,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		// execute the operation
 		res, err = operation.execute(&pc, in, callContext)
 		if err != nil {
-			fmt.Println("OPERATION EXECUTE ERROR ", err.Error())
+			fmt.Println("OPERATION EXECUTE ERROR ", err.Error(), operation, op.String())
 			break
 		}
 		pc++
