@@ -239,6 +239,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 			logged = true
 		}
 		// execute the operation
+		fmt.Println("EXECUTING OPERATION", op.String())
 		res, err = operation.execute(&pc, in, callContext)
 		if err != nil {
 			fmt.Println("OPERATION EXECUTE ERROR ", err.Error(), operation, op.String())
