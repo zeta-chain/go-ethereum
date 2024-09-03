@@ -259,6 +259,7 @@ func runPrecompiledContract(
 	value *big.Int,
 	readOnly bool,
 ) (ret []byte, remainingGas uint64, err error) {
+	fmt.Println("runPrecompiledContract", caller.Address().String())
 	addrCopy := p.Address()
 	inputCopy := make([]byte, len(input))
 	copy(inputCopy, input)
