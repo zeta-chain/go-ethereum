@@ -231,6 +231,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 		// The contract is a scoped environment for this execution context only.
 		code := evm.StateDB.GetCode(addr)
 		if len(code) == 0 {
+			fmt.Println("DEBUG: len(code) == 0")
 			ret, err = nil, nil // gas is unchanged
 		} else {
 			addrCopy := addr
@@ -240,12 +241,15 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 			contract.SetCallCode(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), code)
 			ret, err = evm.interpreter.Run(contract, input, false)
 			gas = contract.Gas
+			fmt.Println("DEBUG: gas", gas)
 		}
 	}
 	// When an error was returned by the EVM or when setting the creation code
 	// above we revert to the snapshot and consume any gas remaining. Additionally
 	// when we're in homestead this also counts for code storage gas errors.
+	fmt.Println("DEBUG CHECK ERR", err)
 	if err != nil {
+		fmt.Println("ERR ", err.Error())
 		evm.StateDB.RevertToSnapshot(snapshot)
 		if err != ErrExecutionReverted {
 			gas = 0
@@ -254,6 +258,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 		//} else {
 		//	evm.StateDB.DiscardSnapshot(snapshot)
 	}
+	fmt.Println("DEBUG: returning ", ret, gas, err)
 	return ret, gas, err
 }
 
