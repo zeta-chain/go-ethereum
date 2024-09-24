@@ -179,6 +179,7 @@ func (c *BoundContract) Call(opts *CallOpts, results *[]interface{}, method stri
 			if code, err = pb.PendingCodeAt(ctx, c.address); err != nil {
 				return err
 			} else if len(code) == 0 {
+				fmt.Printf("DEBUG: PendingCodeAt code is empty at %v\n", c.address)
 				return ErrNoCode
 			}
 		}
@@ -192,6 +193,7 @@ func (c *BoundContract) Call(opts *CallOpts, results *[]interface{}, method stri
 			if code, err = c.caller.CodeAt(ctx, c.address, opts.BlockNumber); err != nil {
 				return err
 			} else if len(code) == 0 {
+				fmt.Printf("DEBUG: CodeAt code is empty at %v\n", c.address)
 				return ErrNoCode
 			}
 		}
@@ -335,6 +337,7 @@ func (c *BoundContract) estimateGasLimit(opts *TransactOpts, contract *common.Ad
 		if code, err := c.transactor.PendingCodeAt(ensureContext(opts.Context), c.address); err != nil {
 			return 0, err
 		} else if len(code) == 0 {
+			fmt.Printf("DEBUG: estimateGasLimit: code is empty at %v\n", c.address)
 			return 0, ErrNoCode
 		}
 	}

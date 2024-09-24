@@ -17,7 +17,6 @@
 package vm
 
 import (
-	"fmt"
 	"hash"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -239,7 +238,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 			logged = true
 		}
 		// execute the operation
-		fmt.Printf("DEBUG: EXECUTING OPERATION %s\n", op.String())
+		//fmt.Printf("DEBUG: EXECUTING OPERATION %s\n", op.String())
 		res, err = operation.execute(&pc, in, callContext)
 		if err != nil {
 			//fmt.Println("OPERATION EXECUTE ERROR ", err.Error(), operation, op.String())
