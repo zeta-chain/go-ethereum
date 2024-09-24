@@ -204,10 +204,11 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	}
 	fmt.Println("DEBUG: TRANSFER 1", caller.Address())
 	evm.Context.Transfer(evm.StateDB, caller.Address(), addr, value)
-	fmt.Println("DEBUG: TRANSFER 2")
+	fmt.Println("DEBUG: TRANSFER 2", caller.Address())
 
 	// Capture the tracer start/end events in debug mode
 	if evm.Config.Debug {
+		fmt.Printf("DEBUG: Debug enabled\n")
 		if evm.depth == 0 {
 			evm.Config.Tracer.CaptureStart(evm, caller.Address(), addr, false, input, gas, value)
 			defer func(startGas uint64, startTime time.Time) { // Lazy evaluation of the parameters
@@ -229,9 +230,10 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	} else {
 		// Initialise a new contract and set the code that is to be used by the EVM.
 		// The contract is a scoped environment for this execution context only.
+		fmt.Printf("DEBUG: GetCode %v\n", addr)
 		code := evm.StateDB.GetCode(addr)
 		if len(code) == 0 {
-			//fmt.Println("DEBUG: len(code) == 0")
+			fmt.Println("DEBUG: GetCode len(code) == 0")
 			ret, err = nil, nil // gas is unchanged
 		} else {
 			addrCopy := addr
@@ -239,6 +241,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 			// The depth-check is already done, and precompiles handled above
 			contract := NewContract(caller, AccountRef(addrCopy), value, gas)
 			contract.SetCallCode(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), code)
+			fmt.Printf("DEBUG: Run %v\n", addr)
 			ret, err = evm.interpreter.Run(contract, input, false)
 			gas = contract.Gas
 			//fmt.Println("DEBUG: gas", gas)
@@ -249,7 +252,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	// when we're in homestead this also counts for code storage gas errors.
 	//fmt.Println("DEBUG CHECK ERR", err)
 	if err != nil {
-		//fmt.Println("ERR ", err.Error())
+		fmt.Printf("DEBUG: Run error %v\n", err)
 		evm.StateDB.RevertToSnapshot(snapshot)
 		if err != ErrExecutionReverted {
 			gas = 0
