@@ -803,7 +803,7 @@ func opStaticCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) 
 	}
 	stack.push(&temp)
 	if err == nil || err == ErrExecutionReverted {
-		fmt.Printf("DEBUG: StaticCall execution reverted, caller %v, toAddr %v\n", scope.Contract.Address(), toAddr)
+		fmt.Printf("DEBUG: StaticCall execution, error %v, caller %v, toAddr %v\n", err, scope.Contract.Address(), toAddr)
 		ret = common.CopyBytes(ret)
 		scope.Memory.Set(retOffset.Uint64(), retSize.Uint64(), ret)
 	}
