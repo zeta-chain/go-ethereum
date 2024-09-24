@@ -200,7 +200,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 			return nil, ErrOutOfGas
 		}
 		if operation.dynamicGas != nil {
-			fmt.Println("DYNAMICGAS")
+			//fmt.Println("DYNAMICGAS")
 			// All ops with a dynamic memory usage also has a dynamic gas cost.
 			var memorySize uint64
 			// calculate the new memory size and expand the memory to fit
@@ -239,10 +239,10 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 			logged = true
 		}
 		// execute the operation
-		fmt.Println("EXECUTING OPERATION", op.String())
+		fmt.Printf("DEBUG: EXECUTING OPERATION %s\n", op.String())
 		res, err = operation.execute(&pc, in, callContext)
 		if err != nil {
-			fmt.Println("OPERATION EXECUTE ERROR ", err.Error(), operation, op.String())
+			//fmt.Println("OPERATION EXECUTE ERROR ", err.Error(), operation, op.String())
 			break
 		}
 		pc++

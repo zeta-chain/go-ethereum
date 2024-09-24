@@ -171,15 +171,15 @@ func (evm *EVM) SetBlockContext(blockCtx BlockContext) {
 // the necessary steps to create accounts and reverses the state in case of an
 // execution error or failed value transfer.
 func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int) (ret []byte, leftOverGas uint64, err error) {
-	fmt.Println("DEBUG EVM CALL", addr.Hex())
+	fmt.Printf("DEBUG: EVM CALL %v\n", addr.Hex())
 	// Fail if we're trying to execute above the call depth limit
 	if evm.depth > int(params.CallCreateDepth) {
-		fmt.Println("ERR1")
+		//fmt.Println("ERR1")
 		return nil, gas, ErrDepth
 	}
 	// Fail if we're trying to transfer more than the available balance
 	if value.Sign() != 0 && !evm.Context.CanTransfer(evm.StateDB, caller.Address(), value) {
-		fmt.Println("ERR2")
+		//fmt.Println("ERR2")
 		return nil, gas, ErrInsufficientBalance
 	}
 	snapshot := evm.StateDB.Snapshot()
@@ -202,9 +202,9 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 		}
 		evm.StateDB.CreateAccount(addr)
 	}
-	fmt.Println("DEBUG TRANSFER 1", caller.Address())
+	fmt.Println("DEBUG: TRANSFER 1", caller.Address())
 	evm.Context.Transfer(evm.StateDB, caller.Address(), addr, value)
-	fmt.Println("DEBUG TRANSFER 2")
+	fmt.Println("DEBUG: TRANSFER 2")
 
 	// Capture the tracer start/end events in debug mode
 	if evm.Config.Debug {
@@ -224,14 +224,14 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 
 	// It is allowed to call precompiles, even via call -- as opposed to callcode, staticcall and delegatecall it can also modify state
 	if isPrecompile {
-		fmt.Println("run precompile")
+		fmt.Printf("DEBUG: run precompile\n")
 		ret, gas, err = evm.RunPrecompiledContract(p, caller, input, gas, value, false)
 	} else {
 		// Initialise a new contract and set the code that is to be used by the EVM.
 		// The contract is a scoped environment for this execution context only.
 		code := evm.StateDB.GetCode(addr)
 		if len(code) == 0 {
-			fmt.Println("DEBUG: len(code) == 0")
+			//fmt.Println("DEBUG: len(code) == 0")
 			ret, err = nil, nil // gas is unchanged
 		} else {
 			addrCopy := addr
@@ -241,15 +241,15 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 			contract.SetCallCode(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), code)
 			ret, err = evm.interpreter.Run(contract, input, false)
 			gas = contract.Gas
-			fmt.Println("DEBUG: gas", gas)
+			//fmt.Println("DEBUG: gas", gas)
 		}
 	}
 	// When an error was returned by the EVM or when setting the creation code
 	// above we revert to the snapshot and consume any gas remaining. Additionally
 	// when we're in homestead this also counts for code storage gas errors.
-	fmt.Println("DEBUG CHECK ERR", err)
+	//fmt.Println("DEBUG CHECK ERR", err)
 	if err != nil {
-		fmt.Println("ERR ", err.Error())
+		//fmt.Println("ERR ", err.Error())
 		evm.StateDB.RevertToSnapshot(snapshot)
 		if err != ErrExecutionReverted {
 			gas = 0
