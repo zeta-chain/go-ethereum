@@ -37,7 +37,7 @@ type (
 	GetHashFunc func(uint64) common.Hash
 )
 
-func (evm *EVM) precompile(addr common.Address) (PrecompiledContract, bool) {
+func (evm *EVM) precompile(addr common.Address, caller ContractRef, readOnly bool) (PrecompiledContract, bool) {
 	var precompiles map[common.Address]PrecompiledContract
 	switch {
 	case evm.chainRules.IsCancun:
@@ -52,7 +52,19 @@ func (evm *EVM) precompile(addr common.Address) (PrecompiledContract, bool) {
 		precompiles = PrecompiledContractsHomestead
 	}
 	p, ok := precompiles[addr]
-	return p, ok
+	if ok {
+		return p, ok
+	}
+	spc, ok := evm.statefulPrecompiles[addr]
+	if ok {
+		return &statefulPrecompiledContractWrapper{
+			evm:      evm,
+			contract: spc,
+			readOnly: readOnly,
+			caller:   caller,
+		}, true
+	}
+	return nil, false
 }
 
 // BlockContext provides the EVM with auxiliary information. Once provided
@@ -121,6 +133,9 @@ type EVM struct {
 	// available gas is calculated in gasCall* according to the 63/64 rule and later
 	// applied in opCall*.
 	callGasTemp uint64
+
+	// statefulPrecompiles holds statefulful precompiled contracts
+	statefulPrecompiles map[common.Address]StatefulPrecompiledContract
 }
 
 // NewEVM returns a new EVM. The returned EVM is not thread safe and should
@@ -186,7 +201,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 		return nil, gas, ErrInsufficientBalance
 	}
 	snapshot := evm.StateDB.Snapshot()
-	p, isPrecompile := evm.precompile(addr)
+	p, isPrecompile := evm.precompile(addr, caller, false)
 	debug := evm.Config.Tracer != nil
 
 	if !evm.StateDB.Exist(addr) {
@@ -286,7 +301,7 @@ func (evm *EVM) CallCode(caller ContractRef, addr common.Address, input []byte, 
 	}
 
 	// It is allowed to call precompiles, even via delegatecall
-	if p, isPrecompile := evm.precompile(addr); isPrecompile {
+	if p, isPrecompile := evm.precompile(addr, caller, true); isPrecompile {
 		ret, gas, err = RunPrecompiledContract(p, input, gas)
 	} else {
 		addrCopy := addr
@@ -331,7 +346,7 @@ func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []by
 	}
 
 	// It is allowed to call precompiles, even via delegatecall
-	if p, isPrecompile := evm.precompile(addr); isPrecompile {
+	if p, isPrecompile := evm.precompile(addr, caller, true); isPrecompile {
 		ret, gas, err = RunPrecompiledContract(p, input, gas)
 	} else {
 		addrCopy := addr
@@ -380,7 +395,7 @@ func (evm *EVM) StaticCall(caller ContractRef, addr common.Address, input []byte
 		}(gas)
 	}
 
-	if p, isPrecompile := evm.precompile(addr); isPrecompile {
+	if p, isPrecompile := evm.precompile(addr, caller, true); isPrecompile {
 		ret, gas, err = RunPrecompiledContract(p, input, gas)
 	} else {
 		// At this point, we use a copy of address. If we don't, the go compiler will

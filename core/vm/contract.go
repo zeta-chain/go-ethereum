@@ -58,6 +58,8 @@ type Contract struct {
 
 	Gas   uint64
 	value *uint256.Int
+
+	isPrecompile bool
 }
 
 // NewContract returns a new contract environment for the execution of EVM.
@@ -81,6 +83,10 @@ func NewContract(caller ContractRef, object ContractRef, value *uint256.Int, gas
 }
 
 func (c *Contract) validJumpdest(dest *uint256.Int) bool {
+	if c.isPrecompile {
+		return false
+	}
+
 	udest, overflow := dest.Uint64WithOverflow()
 	// PC cannot go beyond len(code) and certainly can't be bigger than 63bits.
 	// Don't bother checking for JUMPDEST in that case.
@@ -97,6 +103,10 @@ func (c *Contract) validJumpdest(dest *uint256.Int) bool {
 // isCode returns true if the provided PC location is an actual opcode, as
 // opposed to a data-segment following a PUSHN operation.
 func (c *Contract) isCode(udest uint64) bool {
+	if c.isPrecompile {
+		return false
+	}
+
 	// Do we already have an analysis laying around?
 	if c.analysis != nil {
 		return c.analysis.codeSegment(udest)
@@ -130,6 +140,10 @@ func (c *Contract) isCode(udest uint64) bool {
 // AsDelegate sets the contract to be a delegate call and returns the current
 // contract (for chaining calls)
 func (c *Contract) AsDelegate() *Contract {
+	if c.isPrecompile {
+		return c
+	}
+
 	// NOTE: caller must, at all times be a contract. It should never happen
 	// that caller is something other than a Contract.
 	parent := c.caller.(*Contract)
@@ -178,6 +192,10 @@ func (c *Contract) Value() *uint256.Int {
 // SetCallCode sets the code of the contract and address of the backing data
 // object
 func (c *Contract) SetCallCode(addr *common.Address, hash common.Hash, code []byte) {
+	if c.isPrecompile {
+		return
+	}
+
 	c.Code = code
 	c.CodeHash = hash
 	c.CodeAddr = addr
